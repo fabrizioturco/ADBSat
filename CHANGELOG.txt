@@ -3,6 +3,18 @@ All notable changes to this project will be documented in this file.
 
 Always keep a [Unreleased] section at the top for tracking changes
 
+## [Unreleased (F. Turco)]
+### Changed
+- Year in environment function no longer fixed but changeable via input --> changes in ADBSATFcn and examples to accunt for that
+- axlength in plot_surfq_LVLH enlarged
+### Added
+- Functions ADBSATFcn_euler and calc_coeff_euler which consider attitude input as yaw, pitch, and roll angle (F. Turco)
+- Function plotsurfq_LVLH which plots in LVLH system, considering yaw, pitch, and roll angle of satellite (F. Turco)
+- Outputs Cf_b, Cf_LVLH, and C_D to calc_coeff_eulerAngles
+- Plot of v_rel to plot_surfq_LVLH
+### Removed
+### Fixed
+
 ## [Unreleased]
 ### Changed
 - File input and output structure changed to use user defined directories
