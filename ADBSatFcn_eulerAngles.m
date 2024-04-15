@@ -1,4 +1,4 @@
-function [ pathOut ] = ADBSatFcn_eulerAngles( modpath, respath, param_eq, yaw_deg, pitch_deg, roll_deg, flag_shadow, flag_solar, env, del, verb)
+ function [ pathOut ] = ADBSatFcn_eulerAngles( modpath, respath, param_eq, yaw_deg, pitch_deg, roll_deg, flag_shadow, flag_solar, env, del, verb)
 %ADBSATFCN Creates a .mat file(s) in "/inou/results" with the following fields:
 %
 % Inputs:
@@ -41,10 +41,6 @@ function [ pathOut ] = ADBSatFcn_eulerAngles( modpath, respath, param_eq, yaw_de
 % The University of Manchester
 % November 2012
 %
-% 
-% CHANGELOG
-% 13 Feb 2024: Now considering angles of yaw, pitch, and roll ((Euler angles) instead ofangle of attack and sideslip 
-% (F. Turco)
 %
 %--- Copyright notice ---%
 % Copyright (C) 2021 The University of Manchester

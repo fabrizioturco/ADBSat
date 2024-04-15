@@ -2,21 +2,23 @@ clear
 close all
 
 %% SETTINGS
+
 % modName = 'BEESAT4_highFidelity'
 % modName = 'BEESAT4_highFidelity_noAntennae';
 % modName = 'BEESAT4_highFidelity_flatPlate';
+modName = 'BEESAT4_lowFidelity_4';
 % modName = 'BEESAT4_lowFidelity_3';
 % modName = 'BEESAT4_lowFidelity_3_noAntennae';
 % modName = 'BEESAT4_lowFidelity_2';
 % modName = 'BEESAT4_lowFidelity_2_noAntennae';
-modName = 'BEESAT4_lowFidelity';
+% modName = 'BEESAT4_lowFidelity';
 % modName = 'BEESAT4_lowFidelity_noAntennae';
-
-
+% modName = 'cube';
 
 % Path to model file
 ADBSat_path = ADBSat_dynpath;
-modIn = fullfile(ADBSat_path,'inou','obj_files',[modName,'.obj']);
+model_path = 'C:\Users\turco\phd\1_research\cooperation_TUB_USTUTT\beesat_analysis\data\objFiles';
+modIn = fullfile(model_path,[modName,'.obj']);
 modOut = fullfile(ADBSat_path,'inou','models');
 resOut = fullfile(ADBSat_path,'inou','results');
 
@@ -37,9 +39,9 @@ AnO =  1;
 env = [alt*1e3, lat, lon, year, dayofyear, UTseconds, f107Average, f107Daily, magneticIndex, AnO]; % Environment variables
 
 % Attitude
-yaw     = 45;  % Yaw angle [deg]
+yaw     = 0;  % Yaw angle [deg]
 pitch   = 45;  % Pitch angle [deg]
-roll    = 45; % Roll angle [deg]
+roll    = 0; % Roll angle [deg]
 
 
 % Model parameters
