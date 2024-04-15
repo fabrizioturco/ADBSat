@@ -113,9 +113,9 @@ if view_flag==1
 end
 
 %v_rel
-v_rel   = quiver3(axlength,0,0,-0.5*axlength,0,0,color='r',LineWidth=1,MaxHeadSize=1);
-l       = legend(v_rel,'$\mathbf{v}_{rel}$','Location','NorthWest', 'interpreter', 'latex');
-set(l,'FontSize',13);
+%v_rel   = quiver3(axlength,0,0,-0.5*axlength,0,0,color='r',LineWidth=1,MaxHeadSize=1);
+% l       = legend(v_rel,'$\mathbf{v}_{rel}$','Location','NorthWest', 'interpreter', 'latex');
+% set(l,'FontSize',13);
 
 axis equal
 xlim([-axlength,axlength])

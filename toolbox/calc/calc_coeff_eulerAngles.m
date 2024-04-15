@@ -48,11 +48,6 @@
 % The University of Manchester
 % November 2012
 %
-% 
-% CHANGELOG
-% 13 Feb 2024: Now considering angles of yaw, pitch, and roll ((Euler angles) instead ofangle of attack and sideslip 
-% (F. Turco)
-%
 %
 %--- Copyright notice ---%
 % Copyright (C) 2021 The University of Manchester
@@ -136,6 +131,7 @@ for ii = 1:indexYaw
             L_bLVLH = angle2dcm(yaw, pitch, roll); % LVLH to Body
             L_gLVLH = L_gb * L_bLVLH;
             L_LVLHw = eye(3); % Wind to LVLH
+            % L_bw = angle2dcm(-aos, aoa, 0);   % Wind to Body
             L_gw = L_gb * L_bLVLH * L_LVLHw;    % Wind to Geometric
     
             % Flow direction
@@ -255,7 +251,7 @@ end
 
 if (indexYaw*indexPitch*indexRoll) > 1
     % Creates a merged aerodynamic database from multiple .mat files
-    fileOut  = mergeAEDB(pathsav, matName, del);
+    fileOut  = mergeAEDB_eulerAngles(pathsav, matName, del);
 end
 
 %------------- END OF CODE --------------
