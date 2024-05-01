@@ -9,7 +9,7 @@ close all
 % modName = 'BEESAT4_lowFidelity_3_noAntennae';
 % modName = 'BEESAT4_lowFidelity_2';
 % modName = 'BEESAT4_lowFidelity_2_noAntennae';
-modName = 'BEESAT4_lowFidelity';
+modName = 'BEESAT4_lowFidelity_4';
 % modName = 'BEESAT4_lowFidelity_noAntennae';
 
 
@@ -34,17 +34,20 @@ f107Average = 140; % 65, 140, 250
 f107Daily = 140; % 65, 140, 250
 magneticIndex = ones(1,7)*15; % 0, 15, 45
 AnO =  1;   
-env = [alt*1e3, lat, lon, year, dayofyear, UTseconds, f107Average, f107Daily, magneticIndex, AnO]; % Environment variables
+gravParam = 3.986*10^14; % m^3/s^2
+env = [alt*1e3, lat, lon, year, dayofyear, UTseconds, f107Average, f107Daily, magneticIndex, AnO, gravParam]; % Environment variables
 
 % Attitude
-yaw     = 45;  % Yaw angle [deg]
-pitch   = 45;  % Pitch angle [deg]
-roll    = 45; % Roll angle [deg]
+yaw     = 0;  % Yaw angle [deg]
+pitch   = 0;  % Pitch angle [deg]
+roll    = 0; % Roll angle [deg]
+
+phi = 60; % Angle between flight direction and position vector [deg]
 
 
 % Model parameters
 shadow = 1;
-inparam.gsi_model = ['sentman'];
+inparam.gsi_model = 'sentman';
 % inparam.alpha = 0.85; % Accommodation (altitude dependent)
 % inparam.sigmaN = 0.85;
 % inparam.sigmaT = 0;
@@ -54,6 +57,8 @@ inparam.Tw = 300; % Wall Temperature [K]
 solar = 0;
 inparam.sol_cR = 0.15; % Specular Reflectivity
 inparam.sol_cD = 0.25; % Diffuse Reflectivity
+
+wind = 1; % Flag for consideration of thermospheric wind effects
 
 verb = 1;
 del = 0;
@@ -74,7 +79,7 @@ tic
 [modOut] = ADBSatImport(modIn, modOut, 0);
 
 % Calculate
-[ADBout] = ADBSatFcn_euler(modOut, resOut, inparam, yaw, pitch, roll, shadow, solar, env, del, verb);
+[ADBout] = ADBSatFcn_eulerAngles(modOut, resOut, inparam, yaw, pitch, roll, phi, inc, shadow, solar,wind, env, del, verb);
 result = load(ADBout);
 
 time = toc;

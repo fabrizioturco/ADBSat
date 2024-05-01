@@ -1,4 +1,4 @@
-function [ pathOut ] = ADBSatFcn_eulerAngles( modpath, respath, param_eq, yaw_deg, pitch_deg, roll_deg, flag_shadow, flag_solar, env, del, verb)
+function [ pathOut ] = ADBSatFcn_eulerAngles( modpath, respath, param_eq, yaw_deg, pitch_deg, roll_deg, phi_deg, inc_deg, flag_shadow, flag_solar,flag_wind, env, del, verb)
 %ADBSATFCN Creates a .mat file(s) in "/inou/results" with the following fields:
 %
 % Inputs:
@@ -14,8 +14,11 @@ function [ pathOut ] = ADBSatFcn_eulerAngles( modpath, respath, param_eq, yaw_de
 %       yaw_deg   : vector of yaw angles [deg]
 %       pitch_deg : vector of pitch angles [deg]
 %       roll_deg  : vector of roll angles [deg]
+%       phi_deg   : angle between flight direction and position vector [deg]
+%       inc_deg   : inclination of orbit [deg]
 %       shadow    : flag for shadown analysis
 %       solar     : flag for solar coefficient analysis
+%       wind      : flag for consideration of thermospheric wind effects
 %       env       : vector of input environmental parameters
 %       del       : flag for individual file cleanup (on mergeAEDB)
 %       verb      : flag for visual output
@@ -103,9 +106,21 @@ end
 
 %param_eq.Vw = sqrt(pi.*Rmean.*param_eq.Tw/2); % Average velocity of the reflected diffuse molecules
 
+% Calculating the horizontal wind velocity
+if flag_wind
+    v_wind = atmoshwm(env(2),env(3),env(1),'day',env(5),'seconds',env(6),'model','total', 'version', '14'); % Horizontal wind in m/s
+    v_windmzu = [transpose(v_wind);0]; % Wind velocity in Meridian-Zonal-Up Frame
+else
+    v_windmzu = [0;0;0]; % Wind velocity in Meridian-Zonal-Up Frame
+end
+
+% Calculating the satellite velocity magnitude
+rad_earth = 6.378*10^6; % m
+magnv_sat = sqrt(env(17)/(env(1)+rad_earth));   % m/s
+
 % Calculate Interactions
 pathOut = calc_coeff_eulerAngles(   modpath, respath, ...
-                                    deg2rad(yaw_deg), deg2rad(pitch_deg), deg2rad(roll_deg), ...
-                                    param_eq, flag_shadow, flag_solar, del, verb);
+                                    deg2rad(yaw_deg), deg2rad(pitch_deg), deg2rad(roll_deg), deg2rad(phi_deg), deg2rad(inc_deg), ...
+                                    v_windmzu,magnv_sat,param_eq, flag_shadow, flag_solar, del, verb);
 
 %------------- END OF CODE --------------
