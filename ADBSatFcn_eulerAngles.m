@@ -1,4 +1,4 @@
-function [ pathOut ] = ADBSatFcn_eulerAngles( modpath, respath, param_eq, yaw_deg, pitch_deg, roll_deg, phi_deg, inc_deg, flag_shadow, flag_solar,flag_wind, env, del, verb)
+function [ pathOut ] = ADBSatFcn_eulerAngles( modpath, respath, param_eq, yaw_deg, pitch_deg, roll_deg, phi_deg, inc_deg,RAAN,omega,theta, magn_vsat, v_corot, flag_shadow, flag_solar,flag_wind,flag_corot, env, del, verb)
 %ADBSATFCN Creates a .mat file(s) in "/inou/results" with the following fields:
 %
 % Inputs:
@@ -16,9 +16,15 @@ function [ pathOut ] = ADBSatFcn_eulerAngles( modpath, respath, param_eq, yaw_de
 %       roll_deg  : vector of roll angles [deg]
 %       phi_deg   : angle between flight direction and position vector [deg]
 %       inc_deg   : inclination of orbit [deg]
+%       RAAN      : Right-ascension of Ascending Node [rad]
+%       omega     : Argument of Perigee [rad]
+%       theta     : True Anomaly [rad]
+%       magn_vsat : Magnitude of satellite track velocity [m/s]
+%       v_corot   : Induced velocity through corrotation of atmosphere [m/s]
 %       shadow    : flag for shadown analysis
 %       solar     : flag for solar coefficient analysis
 %       wind      : flag for consideration of thermospheric wind effects
+%       corot     : flag for consideration of the co-rotation of the atmosphere
 %       env       : vector of input environmental parameters
 %       del       : flag for individual file cleanup (on mergeAEDB)
 %       verb      : flag for visual output
@@ -114,13 +120,16 @@ else
     v_windmzu = [0;0;0]; % Wind velocity in Meridian-Zonal-Up Frame
 end
 
-% Calculating the satellite velocity magnitude
-rad_earth = 6.378*10^6; % m
-magnv_sat = sqrt(env(17)/(env(1)+rad_earth));   % m/s
+% Setting the velocity induced by co-rotation
+if flag_corot
+    v_coroteic = v_corot;
+else
+    v_coroteic = [0;0;0];
+end
 
 % Calculate Interactions
 pathOut = calc_coeff_eulerAngles(   modpath, respath, ...
                                     deg2rad(yaw_deg), deg2rad(pitch_deg), deg2rad(roll_deg), deg2rad(phi_deg), deg2rad(inc_deg), ...
-                                    v_windmzu,magnv_sat,param_eq, flag_shadow, flag_solar, del, verb);
+                                    RAAN,omega,theta,v_windmzu,magn_vsat,v_coroteic,param_eq, flag_shadow, flag_solar, del, verb);
 
 %------------- END OF CODE --------------

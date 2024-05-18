@@ -1,18 +1,7 @@
-clear
-close all
+function [ADBout] = SinglePoint_inOrbit_Analysis(alt,inc,lat,lon,year,dayofyear,UTseconds,gravParam,phi,magn_vsat,v_corot,kep,flags)
 
 %% SETTINGS
-% modName = 'BEESAT4_highFidelity'
-% modName = 'BEESAT4_highFidelity_noAntennae';
-% modName = 'BEESAT4_highFidelity_flatPlate';
-% modName = 'BEESAT4_lowFidelity_3';
-% modName = 'BEESAT4_lowFidelity_3_noAntennae';
-% modName = 'BEESAT4_lowFidelity_2';
-% modName = 'BEESAT4_lowFidelity_2_noAntennae';
 modName = 'BEESAT4_lowFidelity_4';
-% modName = 'BEESAT4_lowFidelity_noAntennae';
-
-
 
 % Path to model file
 ADBSat_path = ADBSat_dynpath;
@@ -23,35 +12,33 @@ resOut = fullfile(ADBSat_path,'inou','results');
 %% INPUT
 %Input conditions
 mass = 1.030;
-alt = 400; %km
-inc = 97.03; %deg
-lat = 0;
-lon =  0;
-year = 2023;
-dayofyear = 185; % 04.07.2023
-UTseconds = 12*3600;%16*3600 + 29*60 + 32;
 f107Average = 140; % 65, 140, 250
 f107Daily = 140; % 65, 140, 250
 magneticIndex = ones(1,7)*15; % 0, 15, 45
-AnO =  1;   
-gravParam = 3.986*10^14; % m^3/s^2
+
+% Initialize flags
+verb = flags(1);
+del = flags(2);
+shadow = flags(3);
+AnO = flags(4);
+solar = flags(5);
+wind = flags(6);
+corot = flags(7);
+
+% Initialize needed keplerian elements
+RAAN = kep(4);
+omega = kep(5);
+theta = kep(6);
+  
 env = [alt*1e3, lat, lon, year, dayofyear, UTseconds, f107Average, f107Daily, magneticIndex, AnO, gravParam]; % Environment variables
-we  = 7.2921151 * 10^(-5);  % Earth's rotation rate [rad/s]
-we_vec = [0;0;we];
 
 % Attitude
 yaw     = 0;  % Yaw angle [deg]
 pitch   = 0;  % Pitch angle [deg]
 roll    = 0; % Roll angle [deg]
 
-phi = 80; % Angle between flight direction and position vector [deg]
-omega = deg2rad(10);
-RAAN = deg2rad(10);
-theta = deg2rad(10);
-
 
 % Model parameters
-shadow = 1;
 inparam.gsi_model = 'sentman';
 % inparam.alpha = 0.85; % Accommodation (altitude dependent)
 % inparam.sigmaN = 0.85;
@@ -59,15 +46,8 @@ inparam.gsi_model = 'sentman';
 
 inparam.Tw = 300; % Wall Temperature [K]
 
-solar = 0;
 inparam.sol_cR = 0.15; % Specular Reflectivity
 inparam.sol_cD = 0.25; % Diffuse Reflectivity
-
-wind = 1; % Flag for consideration of thermospheric wind effects
-corot = 1; % Flag for consideration of the co-rotation of the atmosphere
-
-verb = 1;
-del = 0;
 
 if AnO
     Oflag = 'Oxygen';
@@ -79,21 +59,13 @@ end
 [T, rho] = atmosnrlmsise00(alt*1e3, lat, lon, year, dayofyear, UTseconds, f107Average, f107Daily, magneticIndex, Oflag);
 inparam.alpha = 7.5E-17*rho(2)*T(2) / (1+7.5E-17*rho(2)*T(2)); % SESAM for accommodation coefficient (altitude dependent)
 
-% Calculate satellite track velocity (here for circular orbit)
-rad_earth = 6.378*10^6; % m
-magnv_sat = sqrt(env(17)/(env(1)+rad_earth));   % m/s
-
-% Calculate the Co-rotation velocity in EIC reference frame
-pos_eic = [0;alt+rad_earth;0];
-v_corot = cross(we_vec,pos_eic);    % m/s
-
 %% ANALYSIS
 tic
 % Import model
 [modOut] = ADBSatImport(modIn, modOut, 0);
 
 % Calculate
-[ADBout] = ADBSatFcn_eulerAngles(modOut, resOut, inparam, yaw, pitch, roll, phi, inc, RAAN, omega, theta, magnv_sat, v_corot, shadow, solar,wind,corot, env, del, verb);
+[ADBout] = ADBSatFcn_eulerAngles(modOut, resOut, inparam, yaw, pitch, roll, phi, inc, RAAN, omega, theta, magn_vsat, v_corot, shadow, solar, wind, corot, env, del, verb);
 result = load(ADBout);
 
 time = toc;
@@ -102,8 +74,7 @@ time = toc;
 if verb && ~del
     az = 135;
     el = 30;
-     plot_surfq_LVLH(ADBout, modOut, yaw(1)*pi/180, pitch(1)*pi/180, roll(1)*pi/180, 'cp',1,az,el);
-    %plot_surfq_LVLH_withWind(ADBout, modOut, yaw(1)*pi/180, pitch(1)*pi/180, roll(1)*pi/180, 'cp',1,az,el);
+    plot_surfq_LVLH(ADBout, modOut, yaw(1)*pi/180, pitch(1)*pi/180, roll(1)*pi/180, 'cp',1,az,el);
 end
 
 fprintf('\n')
@@ -119,4 +90,6 @@ fprintf('T \t\t= %.4g K\n', T(:));
 fprintf('\nComp time \t= %.4g s\n', time);
 %% 
 fprintf('\n\n')
+end
 %------------ END CODE -----------%
+
