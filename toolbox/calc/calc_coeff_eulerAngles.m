@@ -107,7 +107,7 @@ end
 
 % Values to save in output
 var_out = { 'yaw';'pitch';'roll';'tauDir';'delta';'cp';'ctau';'cd';'cl';...
-            'Cf_w';'Cf_f';'Cf_b';'Cf_LVLH';'C_D';'Cm_B';...
+            'Cf_w';'Cf_f';'Cf_b';'Cf_LVLH';'Cf_rth';'C_D';'Cm_B';...
             'Aref';'AreaProj';'Lref';'param_eq';'shadow'};
 if flag_sol
     var_out = [var_out;{'Cf_s';'Cm_S'}];
@@ -203,7 +203,8 @@ for ii = 1:indexYaw
             Cf_b    = L_gb' * Cf_g;
             Cf_w    = L_gw' * Cf_g;
             Cf_f    = L_fb * L_gb' * Cf_g;
-            Cf_LVLH = L_gLVLH' * Cf_g;
+            Cf_LVLH = L_LVLHw * Cf_w;
+            Cf_rth  = [-Cf_LVLH(3); Cf_LVLH(1); -Cf_LVLH(2)];
 
             % Drag coefficient
             C_D = -Cf_w(1)*Aref/AreaProj;
