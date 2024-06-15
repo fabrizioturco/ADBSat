@@ -21,10 +21,12 @@ close all
 
 currentDir = pwd;
 inouDir = [currentDir, '\inou']; 
-OutDir = [inouDir, '\Results_OrbitalAnalysis'];
+analysisName = '\Source_simplified_low';
+AnalysisDir = [inouDir, '\results', analysisName];
+OutDir = [inouDir, '\results', analysisName, '\Results_OrbitalAnalysis'];
 
-if exist(OutDir, 'dir')
-    rmdir(OutDir, 's');  % Remove old data
+if exist(AnalysisDir, 'dir')
+    rmdir(AnalysisDir, 's');  % Remove old data
 end
 mkdir(OutDir);
 
@@ -37,12 +39,12 @@ we  = 7.2921151 * 10^(-5);                                                  % Ea
 we_vec = [0;0;we];
 
 % Initialize keplerian elements %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-a0       = re + 200 * 10^3;                                                 % Semi-major axis in m
-e0       = 0.0001;                                                          % Eccentricity
-i0       = deg2rad(98);                                                     % Inclination [rad]
-RAAN0    = deg2rad(10);                                                     % Right Ascension of Ascending Node [rad]
-omega0   = deg2rad(10);                                                     % Argument of perigee [rad]
-theta0   = deg2rad(10);                                                     % True anomaly [rad]
+a0       = 6778.173 * 10^3;                                                 % Semi-major axis in m (SOURCE: 6778.172km)
+e0       = 0.001;                                                           % Eccentricity (SOURCE: 0.001)
+i0       = deg2rad(45);                                                     % Inclination [rad] (SOURCE: 45°)
+RAAN0    = deg2rad(0);                                                      % Right Ascension of Ascending Node [rad] (SOURCE: 0°)
+omega0   = deg2rad(0);                                                      % Argument of perigee [rad] (SOURCE: 0°)
+theta0   = deg2rad(0);                                                      % True anomaly [rad] (SOURCE: 0°)
 
 kep0 = [a0; e0; i0; RAAN0; omega0; theta0];
 
@@ -78,7 +80,7 @@ for Pos = 1:nPositions
     
     % Calculate Latitude and longitude from ECI coordinates %%%%%%%%%%%%%%%%%%%
 
-    utc = [year dayofmonth month hourofday minofhour secofmin];             % Coordinated Universal Time
+    utc = [year month dayofmonth hourofday minofhour secofmin];             % Coordinated Universal Time
     lla = eci2lla(transpose(r0),utc);                                       % Transform position from ECI to LLA
     lat = deg2rad(lla(1));                                                  % Latitude [rad]
     lon = deg2rad(lla(2));                                                  % [Longitude [rad]
@@ -101,7 +103,7 @@ for Pos = 1:nPositions
     flag_corot = 1;
     flags = [flag_verb, flag_del, flag_shadow, flag_AnO, flag_solar, flag_wind, flag_corot];
     
-    [ADBout] = SinglePoint_inOrbit_Analysis(alt,inc,lat,lon,year,dayofyear,UTseconds,mu,phi,magn_vsat,v_corot,kep,flags);
+    [ADBout,Euler_combinations] = SinglePoint_inOrbit_Analysis(Pos,alt,inc,lat,lon,year,dayofyear,UTseconds,mu,phi,magn_vsat,v_corot,kep,flags,analysisName);
 
 %% Output %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
@@ -112,27 +114,45 @@ for Pos = 1:nPositions
 end
 
 %% Calculate orbit averaged results %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-Cfw_vec = zeros(nPositions,3);
-C_D_vec = zeros(nPositions,1);
-Aproj_vec = zeros(nPositions,1);
-for Pos = 1:nPositions
-    outName = "results_Pos" + Pos + ".mat";
-    resStruct = load(fullfile(OutDir,outName));
-    Cfw_vec(Pos,:) = resStruct.Cf_w;
-    C_D_vec(Pos,1) = resStruct.C_D;
-    Aproj_vec(Pos,1) = resStruct.AreaProj;
+if Euler_combinations == 1
+    Cfw_vec = zeros(nPositions,3);
+    C_D_vec = zeros(nPositions,1);
+    Aproj_vec = zeros(nPositions,1);
+    for Pos = 1:nPositions
+        outName = "results_Pos" + Pos + ".mat";
+        resStruct = load(fullfile(OutDir,outName));
+        Cfw_vec(Pos,:) = resStruct.Cf_w;
+        C_D_vec(Pos,1) = resStruct.C_D;
+        Aproj_vec(Pos,1) = resStruct.AreaProj;
+    end
+    
+    Cfw_averaged = [sum(Cfw_vec(:,1),"all"),sum(Cfw_vec(:,2),"all"),sum(Cfw_vec(:,3),"all")]/nPositions;
+    C_D_averaged = sum(C_D_vec,"all")/nPositions;
+    Aproj_averaged = sum(Aproj_vec,"all")/nPositions;
+    
+    fprintf("Orbit-averaged values:\n")
+    fprintf('C_D \t= %.4g\n', C_D_averaged);
+    fprintf('A_proj \t= %.4g\n', Aproj_averaged);
+else
+    CfwX_vec = zeros(Euler_combinations(1),Euler_combinations(2),Euler_combinations(3));
+    CfwY_vec = zeros(Euler_combinations(1),Euler_combinations(2),Euler_combinations(3));
+    CfwZ_vec = zeros(Euler_combinations(1),Euler_combinations(2),Euler_combinations(3));
+    beta_inv_vec = zeros(Euler_combinations(1),Euler_combinations(2),Euler_combinations(3));
+    for Pos = 1:nPositions
+        resStruct = load(fullfile(OutDir,outName));
+        CfwX_vec = CfwX_vec + resStruct.aedb.aero.Cf_wX/nPositions;
+        CfwY_vec = CfwY_vec + resStruct.aedb.aero.Cf_wY/nPositions;
+        CfwZ_vec = CfwZ_vec + resStruct.aedb.aero.Cf_wZ/nPositions;
+        beta_inv_vec = beta_inv_vec + resStruct.aedb.Beta_inv;
+        clear resStruct
+    end
+    fileOut = fullfile(OutDir,'OrbitAveraged_Data.mat');
+    var_out = {'CfwX_vec';'CfwY_vec';'CfwZ_vec';'beta_inv_vec'};
+    save(fileOut, var_out{:})
 end
-
-Cfw_averaged = [sum(Cfw_vec(:,1),"all"),sum(Cfw_vec(:,2),"all"),sum(Cfw_vec(:,3),"all")]/nPositions;
-C_D_averaged = sum(C_D_vec,"all")/nPositions;
-Aproj_averaged = sum(Aproj_vec,"all")/nPositions;
-
-fprintf("Orbit-averaged values:\n")
-fprintf('C_D \t= %.4g\n', C_D_averaged);
-fprintf('A_proj \t= %.4g\n', Aproj_averaged);
 
 
 %% 
+fprintf('Code successful.\n')
 fprintf('\n\n')
 %------------ END CODE -----------%

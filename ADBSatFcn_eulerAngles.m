@@ -1,4 +1,4 @@
-function [ pathOut ] = ADBSatFcn_eulerAngles( modpath, respath, param_eq, yaw_deg, pitch_deg, roll_deg, phi_deg, inc_deg,RAAN,omega,theta, magn_vsat, v_corot, flag_shadow, flag_solar,flag_wind,flag_corot, env, del, verb)
+function [ pathOut ] = ADBSatFcn_eulerAngles( modpath, respath, param_eq, yaw_deg, pitch_deg, roll_deg,mass, phi_deg, inc_deg,RAAN,omega,theta, magn_vsat, v_corot, flag_shadow, flag_solar,flag_wind,flag_corot, env, del, verb)
 %ADBSATFCN Creates a .mat file(s) in "/inou/results" with the following fields:
 %
 % Inputs:
@@ -14,6 +14,7 @@ function [ pathOut ] = ADBSatFcn_eulerAngles( modpath, respath, param_eq, yaw_de
 %       yaw_deg   : vector of yaw angles [deg]
 %       pitch_deg : vector of pitch angles [deg]
 %       roll_deg  : vector of roll angles [deg]
+%       mass      : Satellite mass [kg]
 %       phi_deg   : angle between flight direction and position vector [deg]
 %       inc_deg   : inclination of orbit [deg]
 %       RAAN      : Right-ascension of Ascending Node [rad]
@@ -31,12 +32,12 @@ function [ pathOut ] = ADBSatFcn_eulerAngles( modpath, respath, param_eq, yaw_de
 %
 % Outputs:
 %       fileout  : .mat file(s) with the following items in a structure variable
-%           yaw         : Yaw angle
-%           pitch       : Pitch angle
-%           roll        : Roll angle
-%           Aref        : Reference area = Area total/2
-%           Lref        : Reference longitude = Xmax-Xmin
-%           AreaProj    : Projected area
+%           yaw          : Yaw angle
+%           pitch        : Pitch angle
+%           roll         : Roll angle
+%           Aref         : Reference area = Area total/2
+%           Lref         : Reference longitude = Xmax-Xmin
+%           AreaProj     : Projected area
 %           aero
 %               Cf_w     : Total aerodynamic force coeffients in wind axes [x,y,z] (3x1)
 %               Cf_f     : Total aerodynamic force coeffients in flight axes [x,y,z] (3x1)
@@ -44,7 +45,8 @@ function [ pathOut ] = ADBSatFcn_eulerAngles( modpath, respath, param_eq, yaw_de
 %           solar
 %               C_s      : Total solar force coefficients in
 %               C_sB     : Total solar moment coefficients in
-%           param_eq : Structure containing input GSI parameters
+%           param_eq     : Structure containing input GSI parameters
+%           beta_inv     : Inverse ballistic coefficient [m^2/kg]
 %
 % Author: David Mostaza-Prieto
 % The University of Manchester
@@ -129,7 +131,7 @@ end
 
 % Calculate Interactions
 pathOut = calc_coeff_eulerAngles(   modpath, respath, ...
-                                    deg2rad(yaw_deg), deg2rad(pitch_deg), deg2rad(roll_deg), deg2rad(phi_deg), deg2rad(inc_deg), ...
+                                    deg2rad(yaw_deg), deg2rad(pitch_deg), deg2rad(roll_deg),mass, deg2rad(phi_deg), deg2rad(inc_deg), ...
                                     RAAN,omega,theta,v_windmzu,magn_vsat,v_coroteic,param_eq, flag_shadow, flag_solar, del, verb);
 
 %------------- END OF CODE --------------

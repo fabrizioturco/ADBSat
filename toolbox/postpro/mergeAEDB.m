@@ -73,8 +73,8 @@ for ii = 1:length(fis)
         load(fullfile(pathName,fis(ii).name));
         count = count+1;
         
-        AreaRef_old = AreaRef;
-        LenRef_old = LenRef;
+        AreaRef_old = Aref;
+        LenRef_old = Lref;
         param_eq_old = param_eq;        
         
         v_aoa(count) = aoa;

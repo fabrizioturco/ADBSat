@@ -14,6 +14,7 @@
 %       yawArray    : Yaw angle(s) [rad]
 %       pitchArray  : Pitch angle(s) [rad]
 %       rollArray   : Roll angle(s) [rad]
+%       mass        : Satellite mass [kg]
 %       phi         : angle between flight direction and position vector [rad]
 %       inc         : inclination of orbit [rad]
 %       RAAN        : Right-ascension of Ascending Node [rad]
@@ -44,6 +45,7 @@
 %           Cf_b     : Body force coefficient in body axes (3x1)
 %           Cf_LVLH  : Body force coefficient in LVLH axes (3x1)
 %           C_D      : Body drag coefficient relative to AreaProj
+%           beta_inv : Inverse ballistic coefficient [m^2/kg]
 %           Cm_B     : Body moment coefficient in body axes (3x1)
 %           Aref     : Reference area used in calculations [m^2]
 %           AreaProj : Projected area to the flow [m^2]
@@ -85,7 +87,7 @@
 % with this program. If not, see <http://www.gnu.org/licenses/>.
 %------------- BEGIN CODE --------------
 
-function [fileOut] = calc_coeff_eulerAngles(fiName, respath, yawArray, pitchArray, rollArray, phi, inc,RAAN,omega,theta, v_windmzu, magnv_sat, v_coroteic, param_eq, flag_shad, flag_sol, del, verb)
+function [fileOut] = calc_coeff_eulerAngles(fiName, respath, yawArray, pitchArray, rollArray,mass, phi, inc,RAAN,omega,theta, v_windmzu, magnv_sat, v_coroteic, param_eq, flag_shad, flag_sol, del, verb)
 
 [~,matName,~] = fileparts(fiName);
 
@@ -123,12 +125,11 @@ end
 
 % Values to save in output
 var_out = { 'yaw';'pitch';'roll';'tauDir';'delta';'cp';'ctau';'cd';'cl';...
-            'Cf_w';'Cf_f';'Cf_b';'Cf_LVLH';'C_D';'Cm_B';...
+            'Cf_w';'Cf_f';'Cf_b';'Cf_LVLH';'C_D';'beta_inv';'Cm_B';...
             'Aref';'AreaProj';'Lref';'param_eq';'shadow'};
 if flag_sol
     var_out = [var_out;{'Cf_s';'Cm_S'}];
 end
-
 
 for ii = 1:indexYaw
     yaw = yawArray(ii);
@@ -265,6 +266,9 @@ for ii = 1:indexYaw
 
             % Drag coefficient
             C_D = -Cf_w(1)*Aref/AreaProj;
+
+            % Inverse ballistic coefficient
+            beta_inv = C_D*Aref/mass;
             
             % Moment coefficients
             Cmom_G = 1/(Aref*Lref).*(cross(barC,tauDir)*(ctau'.*areas') +...
@@ -307,9 +311,15 @@ if verb
     delete(h); % clean-up waitbar
 end
 
+%{
 if (indexYaw*indexPitch*indexRoll) > 1
     % Creates a merged aerodynamic database from multiple .mat files
     fileOut  = mergeAEDB(pathsav, matName, del);
+end
+%}
+if (indexYaw*indexPitch*indexRoll) > 1
+    % Creates a merged aerodynamic database from multiple .mat files
+    fileOut  = mergeAEDB_Euler(pathsav, matName, del);
 end
 
 
