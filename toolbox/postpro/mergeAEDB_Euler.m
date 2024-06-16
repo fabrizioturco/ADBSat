@@ -1,4 +1,4 @@
-function fileOut = mergeAEDB(pathName, fiName, del)
+function fileOut = mergeAEDB_Euler(pathName, fiName, del)
 % Merges coefficients computed for different aoa/aos into a single structure
 % Assumes that a complete grid of aoa and aos values is available in the
 % input folder
@@ -21,6 +21,8 @@ function fileOut = mergeAEDB(pathName, fiName, del)
 %            C_s     : Total solar force coefficients in axes [x,y,z] (aoa x aos)
 %            C_sB    : Total solar moment coefficients in axes [x,y,z] (aoa x aos)
 %        param_eq    : Structure containing input GSI parameters
+%       beta_inv     : Inverse ballistic coefficient [kg/m^2]
+%        vdir        : Direction of resulting velocity vector in geometric reference frame [-]
 %
 % Author: David Mostaza-Prieto
 % The University of Manchester
@@ -64,6 +66,8 @@ v_Cm_B = zeros(3,nFiles);
 v_AreaProj = zeros(1,nFiles);
 v_Cf_s  = zeros(3,nFiles);
 v_Cm_S = zeros(3,nFiles);
+v_vdir = zeros(3,nFiles);
+v_cp = zeros(1,nFiles);
 check_input = 1;
 
 % Loop through each matching file and load in parameters
@@ -87,6 +91,11 @@ for ii = 1:length(fis)
         v_Cf_f(:,count) = struct.Cf_f;
         v_Cm_B(:,count) = struct.Cm_B;
         v_AreaProj(count) = struct.AreaProj;
+        v_vdir(:,count) = struct.vdir;
+        if count == 1
+            v_cp = zeros(size(struct.cp,2),nFiles);
+        end
+        v_cp(:,count) = transpose(struct.cp);
         
         if exist('Cf_s','var')
             v_Cf_s(:,count)  = struct.Cf_s;
@@ -113,29 +122,7 @@ n_pitch = numel(pitch_u);
 n_roll = numel(roll_u);
 
 [aedb.yaw, aedb.pitch,aedb.roll] = meshgrid(yaw_u, pitch_u,roll_u); % each output is a yaw_u x pitch_u x roll_u matrix
-%{
-aedb.aero.Cf_wX = reshape(v_Cf_w(1,index), [n_yaw n_pitch n_roll])';
-aedb.aero.Cf_wY = reshape(v_Cf_w(2,index), [n_yaw n_pitch n_roll])';
-aedb.aero.Cf_wZ = reshape(v_Cf_w(3,index), [n_yaw n_pitch n_roll])';
 
-aedb.aero.Cf_fX = reshape(v_Cf_f(1,index), [n_yaw n_pitch n_roll])';
-aedb.aero.Cf_fY = reshape(v_Cf_f(2,index), [n_yaw n_pitch n_roll])';
-aedb.aero.Cf_fZ = reshape(v_Cf_f(3,index), [n_yaw n_pitch n_roll])';
-
-aedb.aero.Cm_BX = reshape(v_Cm_B(1,index), [n_yaw n_pitch n_roll])';
-aedb.aero.Cm_BY = reshape(v_Cm_B(2,index), [n_yaw n_pitch n_roll])';
-aedb.aero.Cm_BZ = reshape(v_Cm_B(3,index), [n_yaw n_pitch n_roll])';
-
-aedb.AreaProj = reshape(v_AreaProj(1,index), [n_yaw n_pitch n_roll])';
-
-aedb.solar.Cf_sX = reshape(v_Cf_s(1,index), [n_yaw n_pitch n_roll])';
-aedb.solar.Cf_sY = reshape(v_Cf_s(2,index), [n_yaw n_pitch n_roll])';
-aedb.solar.Cf_sZ = reshape(v_Cf_s(3,index), [n_yaw n_pitch n_roll])';
-
-aedb.solar.Cm_sBX = reshape(v_Cm_S(1,index), [n_yaw n_pitch n_roll])';
-aedb.solar.Cm_sBY = reshape(v_Cm_S(2,index), [n_yaw n_pitch n_roll])';
-aedb.solar.Cm_sBZ = reshape(v_Cm_S(3,index), [n_yaw n_pitch n_roll])';
-%}
 aedb.aero.Cf_wX = permute(reshape(v_Cf_w(1,index), [n_yaw n_pitch n_roll]),[2 1 3]);
 aedb.aero.Cf_wY = permute(reshape(v_Cf_w(2,index), [n_yaw n_pitch n_roll]),[2 1 3]);
 aedb.aero.Cf_wZ = permute(reshape(v_Cf_w(3,index), [n_yaw n_pitch n_roll]),[2 1 3]);
@@ -158,6 +145,16 @@ aedb.solar.Cf_sZ = permute(reshape(v_Cf_s(3,index), [n_yaw n_pitch n_roll]),[2 1
 aedb.solar.Cm_sBX = permute(reshape(v_Cm_S(1,index), [n_yaw n_pitch n_roll]),[2 1 3]);
 aedb.solar.Cm_sBY = permute(reshape(v_Cm_S(2,index), [n_yaw n_pitch n_roll]),[2 1 3]);
 aedb.solar.Cm_sBZ = permute(reshape(v_Cm_S(3,index), [n_yaw n_pitch n_roll]),[2 1 3]);
+
+aedb.vdir_X = permute(reshape(v_vdir(1,index), [n_yaw n_pitch n_roll]),[2 1 3]);
+aedb.vdir_Y = permute(reshape(v_vdir(2,index), [n_yaw n_pitch n_roll]),[2 1 3]);
+aedb.vdir_Z = permute(reshape(v_vdir(3,index), [n_yaw n_pitch n_roll]),[2 1 3]);
+
+reshaped_cp = cell(1,size(v_cp,1));
+for j=1:size(v_cp,1)
+    reshaped_cp{j} = permute(reshape(v_cp(j,index), [n_yaw n_pitch n_roll]),[2 1 3]);
+end
+aedb.cp = reshaped_cp;
 
 if check_input
     aedb.AreaRef = struct.Aref;

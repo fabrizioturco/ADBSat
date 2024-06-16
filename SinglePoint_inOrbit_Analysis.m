@@ -34,16 +34,18 @@ theta = kep(6);
 env = [alt*1e3, lat, lon, year, dayofyear, UTseconds, f107Average, f107Daily, magneticIndex, AnO, gravParam]; % Environment variables
 
 % Attitude
-
+%{
 yaw     = linspace(-180,180,37);  % Yaw angle [deg]
 pitch   = linspace(-180,180,37);  % Pitch angle [deg]
 roll    = linspace(-180,180,37);  % Roll angle [deg]
-
-%{
-yaw     = linspace(-180,180,3);  % Yaw angle [deg]
-pitch   = linspace(-180,180,3);  % Pitch angle [deg]
-roll    = linspace(-180,180,3);  % Roll angle [deg]
 %}
+
+yaw     = linspace(-180,180,1);  % Yaw angle [deg]
+yaw = 0;
+pitch   = linspace(0,90,7);  % Pitch angle [deg]
+roll    = linspace(-180,180,1);  % Roll angle [deg]
+roll = 0;
+
 nEuler_combinations = (length(yaw)*length(pitch)*length(roll));
 Euler_combinations = [length(yaw),length(pitch),length(roll)];
 
@@ -84,7 +86,15 @@ time = toc;
 if verb && ~del
     az = 135;
     el = 30;
-    plot_surfq_LVLH(ADBout, modOut, yaw(1)*pi/180, pitch(1)*pi/180, roll(1)*pi/180, 'cp',1,az,el);
+    % plot_surfq_LVLH(ADBout, modOut, yaw(1)*pi/180, pitch(1)*pi/180, roll(1)*pi/180, 'cp',1,az,el);
+    for i=1:length(yaw)
+        for j=1:length(pitch)
+            for k=1:length(roll)
+                plot_surfq_LVLH_withWind(ADBout, modOut, yaw(1,i), pitch(1,j), roll(1,k), 'cp',1,az,el,i,j,k);
+                pause(0.1)
+            end
+        end
+    end
 end
 if nEuler_combinations == 1
     fprintf('\n')

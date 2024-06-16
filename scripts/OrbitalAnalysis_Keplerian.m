@@ -21,7 +21,7 @@ close all
 
 currentDir = pwd;
 inouDir = [currentDir, '\inou']; 
-analysisName = '\Source_simplified_low';
+analysisName = '\Test';
 AnalysisDir = [inouDir, '\results', analysisName];
 OutDir = [inouDir, '\results', analysisName, '\Results_OrbitalAnalysis'];
 
@@ -94,7 +94,7 @@ for Pos = 1:nPositions
 %% Call ADBSat %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     % Set flags for analysis
-    flag_verb = 0;
+    flag_verb = 1;
     flag_del = 0;
     flag_shadow = 1;
     flag_AnO = 1;

@@ -126,7 +126,7 @@ end
 % Values to save in output
 var_out = { 'yaw';'pitch';'roll';'tauDir';'delta';'cp';'ctau';'cd';'cl';...
             'Cf_w';'Cf_f';'Cf_b';'Cf_LVLH';'C_D';'beta_inv';'Cm_B';...
-            'Aref';'AreaProj';'Lref';'param_eq';'shadow'};
+            'Aref';'AreaProj';'Lref';'vdir';'param_eq';'shadow'};
 if flag_sol
     var_out = [var_out;{'Cf_s';'Cm_S'}];
 end

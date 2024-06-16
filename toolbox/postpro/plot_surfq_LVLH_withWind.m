@@ -1,15 +1,22 @@
-function h = plot_surfq_LVLH(fileIn, modIn, yaw_deg, pitch_deg, roll_deg, param, view_flag, view_az, view_el)
+function h = plot_surfq_LVLH_withWind(fileIn, modIn, yaw_deg, pitch_deg, roll_deg, param, view_flag, view_az, view_el,yawIndex,pitchIndex,rollIndex)
 % Plots the surface mesh with color proportional to the chosen parameter
 %
 % Inputs:
-%    file_name  : Name of the file containing the results (fiName_eqmodel)
-%    folderpath : Folder containig the file
-%    aoa        : Angle of attack [rad]
-%    aos        : Angle of sideslip [rad]
-%    param      : Surface parameter to plot (cp, ctau, cd, cl)
+%       file_name   : Name of the file containing the results (fiName_eqmodel)
+%       modIn       : Path to modesl
+%       yaw_deg     : Yaw angle [deg]
+%       pitch_deg   : Pitch angle [deg]
+%       roll_deg    : Roll angle [deg]
+%       param       : Chosen visualization parameter
+%       view_flag   : Flag for View
+%       view_az     : Flag for azimuth
+%       view_el     : Flag for elevation
+%       yawIndex    : Index for local yaw angle in assembled matrix
+%       pitchIndex  : Index for local pitch angle in assembled matrix
+%       rollIndex   : Index for local roll angle in assembled matrix
 %
 % Outputs:
-%   h           : A patch object, containing the shape colour-coded by the chosen parameter
+%       h           : A patch object, containing the shape colour-coded by the chosen parameter
 %
 % Author: David Mostaza-Prieto
 % The University of Manchester
@@ -44,9 +51,6 @@ z_g = meshdata.ZData;
 
 % Load results for indicated yaw, pitch, and roll
 s = load(fileIn);
-if isfield(s, 'aedb')
-    disp('Please select a single ADBSat output .mat file')
-end
 
 % Convert to Radians
 yaw     = deg2rad(yaw_deg);
@@ -56,66 +60,27 @@ roll    = deg2rad(roll_deg);
 % Coordinate transformation matrices
 L_gb = [1 0 0; 0 -1 0; 0 0 -1]; % Body to Geometric
 L_fb = [-1 0 0; 0 1 0; 0 0 -1]; % Body to Flight
-%L_LVLHw = eye(3);
-%L_bLVLH = angle2dcm(yaw, pitch, roll); % LVLH to Body
-%L_gw    = L_gb * L_bLVLH * L_LVLHw;    % Wind to Geometric
-%L_gLVLH = L_gb * L_bLVLH;
+L_LVLHw = eye(3);
+L_bLVLH = angle2dcm(yaw, pitch, roll); % LVLH to Body
+L_gw    = L_gb * L_bLVLH * L_LVLHw;    % Wind to Geometric
+L_gLVLH = L_gb * L_bLVLH;
 
-% My coordinate transformations
-% Case distinction for using arctan 
-% angle_xy: Angle between projection of v_relg in xg-yg-plane and xg
-if vdir(1) >0
-    if vdir(2) > 0
-        angle_xy = atan(abs(v_relg(2))/abs(v_relg(1)));         % Quadrat 1 Solution
-    else
-        angle_xy = -1 * atan(abs(v_relg(2))/abs(v_relg(1)));    % Quadrat 4 Solution
-    end
-else
-    if vdir(2) > 0
-        angle_xy = pi - atan(abs(v_relg(2))/abs(v_relg(1)));    % Quadrat 2 Solution
-    else
-        angle_xy = pi + atan(abs(v_relg(2))/abs(v_relg(1)));    % Quadrat 3 Solution
-    end
-end
-% angle_xz: Angle between projection of v_relg in xg-zg-plane and xg
-if vdir(3) > 0
-    angle_xz = atan(abs(v_relg(3))/sqrt(v_relg(2)^2 + v_relg(1)^2)); 
-else
-    angle_xz = -1 * atan(abs(v_relg(3))/sqrt(v_relg(2)^2 + v_relg(1)^2)); 
-end
-L_gw = rotz(180) * angle2dcm(-angle_xy,angle_xz,0); % Wind to Geometric (Rotation around z and then around y) -> xw points in the opposite direction of v_relw
-
-ax_F = -L_fb * L_gb';
-ax_W = -L_gw';
-
-% axlength = max([max(max(x_g))-min(min(x_g)), max(max(y_g))-min(min(y_g)), max(max(z_g))-min(min(z_g))]);
-axlength = 1*s.Lref;
-
-% Reference Point
-x0 = [0;0;0]; y0 = [0;0;0]; z0 = [0;0;0];
+axlength = 1*s.aedb.LenRef;
 
 hFig = figure;
 hold on
-%Wind
-% W = quiver3(x0,y0,z0,L_gw(:,1),L_gw(:,2),L_gw(:,3),axlength, 'b');
-% quiver3(0,0,0,L_gw(1,1),L_gw(1,2),L_gw(1,3),axlength, 'b', 'LineWidth',2)
-% % % Body
-% B = quiver3(x0,y0,z0,L_gb(:,1),L_gb(:,2),L_gb(:,3),axlength,'r');
-% quiver3(0,0,0,L_gb(1,1),L_gb(1,2),L_gb(1,3),axlength, 'r', 'LineWidth',2)
-% % Geometric
-% G = quiver3(x0,y0,z0,[1;0;0],[0;1;0],[0;0;1],axlength,'g');
-% % % Flight
-% F = quiver3(x0,y0,z0,L_fb(:,1),L_fb(:,2),L_fb(:,3),axlength,'k');
 axis equal
 grid on
 
-h = patch(x_g, y_g, z_g, s.(param));
+color_param = s.aedb.(param);
+coloring = zeros(1,size(color_param,2));    
+for i=1:size(color_param,2) % iterates over panels
+    coloring(1,i) = color_param{1,i}(pitchIndex,yawIndex,rollIndex);
+end
+
+h = patch(x_g, y_g, z_g, coloring);
 colorbar
-% legend([W,B,G,F],'Wind','Body','Geometric','Flight','Location','NorthWest')
-% legend([W,G],'Wind','Geometric','Location','NorthWest')
-% set(h,'EdgeAlpha',0)
 string1 = strcat(param,' Surface Distribution');
-% string1 = strcat('cp surface distribution');
 
 string2 = strcat('Yaw: ',mat2str(yaw_deg),' deg, Pitch: ', mat2str(pitch_deg), ' deg, Roll: ', mat2str(roll_deg));
 xlabel('x_{LVLH}'); ylabel('y_{LVLH}'); zlabel('z_{LVLH}')
@@ -137,7 +102,11 @@ if view_flag==1
 end
 
 %v_rel
-v_rel   = quiver3(axlength,0,0,-0.5*axlength,0,0,color='r',LineWidth=1,MaxHeadSize=1);
+vdirX = s.aedb.vdir_X(pitchIndex,yawIndex,rollIndex);
+vdirY = s.aedb.vdir_Y(pitchIndex,yawIndex,rollIndex);
+vdirZ = s.aedb.vdir_Z(pitchIndex,yawIndex,rollIndex);
+vdir_LVLH = inv(L_gLVLH) * [vdirX;vdirY;vdirZ];
+v_rel   = quiver3(axlength,0,0,0.5*axlength*vdir_LVLH(1),0.5*axlength*vdir_LVLH(2),0.5*axlength*vdir_LVLH(3),color='r',LineWidth=1,MaxHeadSize=1);
 l       = legend(v_rel,'$\mathbf{v}_{rel}$','Location','NorthWest', 'interpreter', 'latex');
 set(l,'FontSize',13);
 
@@ -148,7 +117,7 @@ zlim([-axlength,axlength])
 
 % Set custom update function
 dcm = datacursormode(hFig);
-set(dcm,'UpdateFcn',{@myupdatefcn,s.(param),param});
+set(dcm,'UpdateFcn',{@myupdatefcn,coloring,param});
 end
 
 function txt = myupdatefcn(~,evt,data,name)
