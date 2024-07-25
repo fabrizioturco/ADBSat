@@ -5,6 +5,7 @@ GSI_model2 = @coeff_CLL;
 h = 300e3;
 lat = 0;
 lon = 0;
+year = 2002;
 dayOfYear = 1;
 UTseconds = 0;
 f107Average = 140;
@@ -12,7 +13,7 @@ f107Daily = 140;
 magneticIndex = ones([1,7])*15;
 
 param_eq = struct;
-param_eq = environment(param_eq, h, lat, lon, dayOfYear, UTseconds, f107Average, f107Daily, magneticIndex, 1);
+param_eq = environment(param_eq, h, lat, lon, year, dayOfYear, UTseconds, f107Average, f107Daily, magneticIndex, 1);
 
 param_eq.Tw = 300;
 delta = deg2rad(0:1:90); % Angle from Normal

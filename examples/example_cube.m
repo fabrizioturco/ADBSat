@@ -32,7 +32,7 @@ resOut = fullfile(ADBSat_path,'inou','results',modName);
 %Input conditions
 alt = 200; %km
 inc = 51.6; %deg
-env = [alt*1e3, inc/2, 0, 106, 0, 65, 65, ones(1,7)*3, 0]; % Environment variables
+env = [alt*1e3, inc/2, 0, 2002, 106, 0, 65, 65, ones(1,7)*3, 0]; % Environment variables
 
 aoa_deg = 0; % Angle of attack [deg]
 aos_deg = 0; % Angle of sideslip [deg]
@@ -54,7 +54,7 @@ del = 0;
 [modOut] = ADBSatImport(modIn, modOut, verb);
 
 % Environment Calculations
-inparam = environment(inparam, env(1),env(2),env(3),env(4),env(5),env(6),env(7),env(8:14),env(15));
+inparam = environment(inparam, env(1),env(2),env(3),env(4),env(5),env(6),env(7),env(8),env(9:15),env(16));
 
 % Coefficient Calculation
 fileOut = calc_coeff(modOut, resOut, deg2rad(aoa_deg), deg2rad(aos_deg), inparam, shadow, solar, 1, 0); 
